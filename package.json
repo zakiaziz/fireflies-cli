@@ -1,47 +1,21 @@
 {
   "name": "@zakiaziz/fireflies-cli",
   "version": "0.1.0",
-  "description": "A complete command line interface for the Fireflies.ai API.",
+  "description": "Command-line interface for the Fireflies.ai API.",
   "type": "module",
-  "bin": {
-    "fireflies": "./dist/cli.js"
-  },
-  "files": [
-    "dist",
-    "README.md",
-    "LICENSE",
-    "docs"
-  ],
+  "bin": { "fireflies": "./dist/cli.js" },
+  "files": ["dist", "README.md", "LICENSE", "docs"],
   "scripts": {
-    "build": "bun build bin/fireflies.ts --target=node --outfile dist/cli.js",
-    "check": "tsc --noEmit",
-    "test": "bun run build && bun test --coverage",
+    "build": "bun build src/cli.ts --target=node --outfile dist/cli.js",
+    "check": "bun node_modules/typescript/bin/tsc --noEmit",
     "prepack": "bun run build",
-    "dev": "bun --watch bin/fireflies.ts"
+    "dev": "bun --watch src/cli.ts"
   },
-  "engines": {
-    "node": ">=22"
-  },
-  "keywords": [
-    "fireflies",
-    "cli",
-    "meetings",
-    "transcription",
-    "graphql"
-  ],
+  "engines": { "node": ">=22" },
+  "packageManager": "bun@1.3.11",
+  "keywords": ["cli", "fireflies"],
   "license": "MIT",
-  "devDependencies": {
-    "@types/bun": "^1.2.21",
-    "typescript": "^5.9.2"
-  },
-  "dependencies": {
-    "graphql": "^17.0.2"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/zakiaziz/fireflies-cli.git"
-  },
-  "publishConfig": {
-    "access": "public"
-  }
+  "repository": { "type": "git", "url": "git+https://github.com/zakiaziz/fireflies-cli.git" },
+  "publishConfig": { "access": "public" },
+  "devDependencies": { "@types/node": "^24", "typescript": "^5.8" }
 }
