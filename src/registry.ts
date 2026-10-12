@@ -981,6 +981,8 @@ const definitions: Definition[] = [
     options: [
       stringOption("keyword", "TEXT", "Search titles, spoken words, or both, as set by --scope. Maximum 255 characters.", { check: lengthCheck("--keyword", 0, 255) }),
       enumOption("scope", "SCOPE", "Where --keyword searches.", ["title", "sentences", "all"], { default: "title", requires: ["keyword"] }),
+      stringOption("title", "TEXT", "Only transcripts with this title. Fireflies deprecated it in favor of --keyword. Maximum 256 characters.", { conflicts: ["keyword"], check: lengthCheck("--title", 0, 256) }),
+      dateOption("date", "Only transcripts created within", "undocumented"),
       dateOption("from-date", "Only transcripts created after", "undocumented"),
       dateOption("to-date", "Only transcripts created before", "undocumented"),
       stringOption("host-email", "EMAIL", "Only meetings hosted by this email address.", { check: emailCheck("--host-email") }),
@@ -993,14 +995,17 @@ const definitions: Definition[] = [
     graphql: {
       kind: "query",
       name: "Transcripts",
-      variables: "($keyword: String, $scope: TranscriptsQueryScope, $fromDate: DateTime, $toDate: DateTime, $limit: Int, $skip: Int, $hostEmail: String, $userId: String, $mine: Boolean, $organizers: [String], $participants: [String], $channelId: String)",
+      variables: "($title: String, $date: Float, $keyword: String, $scope: TranscriptsQueryScope, $fromDate: DateTime, $toDate: DateTime, $limit: Int, $skip: Int, $hostEmail: String, $userId: String, $mine: Boolean, $organizers: [String], $participants: [String], $channelId: String)",
       field: "transcripts",
-      arguments: "keyword: $keyword, scope: $scope, fromDate: $fromDate, toDate: $toDate, limit: $limit, skip: $skip, host_email: $hostEmail, user_id: $userId, mine: $mine, organizers: $organizers, participants: $participants, channel_id: $channelId",
+      arguments: "title: $title, date: $date, keyword: $keyword, scope: $scope, fromDate: $fromDate, toDate: $toDate, limit: $limit, skip: $skip, host_email: $hostEmail, user_id: $userId, mine: $mine, organizers: $organizers, participants: $participants, channel_id: $channelId",
       selection: transcriptListFields,
     },
     variables: (context) => {
       const { options } = context;
+      const date = options.string("date");
       return {
+        title: options.string("title"),
+        date: date === undefined ? undefined : Date.parse(date),
         keyword: options.string("keyword"),
         scope: options.string("scope"),
         fromDate: options.string("from-date"),
@@ -1019,6 +1024,7 @@ const definitions: Definition[] = [
     examples: [
       "fireflies transcripts list --mine --from-date 2026-08-01 --page-size 20",
       "fireflies transcripts list --keyword underwriting --scope all --participant buyer@example.com --all --max-items 100",
+      "fireflies transcripts list --title 'Weekly sync' --date 2026-08-01",
     ],
   },
   {

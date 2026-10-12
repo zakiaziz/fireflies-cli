@@ -102,7 +102,7 @@ fireflies transcripts title update 01HXYZ --title 'Q3 planning review' --dry-run
 
 | Command | Description | Options |
 | --- | --- | --- |
-| fireflies transcripts list | List and filter transcripts. | --keyword TEXT, --scope SCOPE, --from-date DATE, --to-date DATE, --host-email EMAIL, --user-id ID, --mine, --organizer EMAIL, --participant EMAIL, --channel-id ID, --page-size N, --cursor TOKEN, --all, --max-items N |
+| fireflies transcripts list | List and filter transcripts. | --keyword TEXT, --scope SCOPE, --title TEXT, --date DATE, --from-date DATE, --to-date DATE, --host-email EMAIL, --user-id ID, --mine, --organizer EMAIL, --participant EMAIL, --channel-id ID, --page-size N, --cursor TOKEN, --all, --max-items N |
 | fireflies transcripts get TRANSCRIPT_ID | Get one transcript with sentences, summary, and analytics. | None |
 | fireflies transcripts delete TRANSCRIPT_ID | Delete a transcript. | --yes, --dry-run |
 | fireflies transcripts share TRANSCRIPT_ID | Share a transcript by email. | --email EMAIL, --expiry-days DAYS, --yes, --dry-run |
