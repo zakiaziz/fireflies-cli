@@ -354,7 +354,7 @@ function toCommand(definition: Definition): ResourceCommand {
   };
 }
 
-const UNPAGINATED = "Not paginated. The Fireflies API accepts no paging arguments for this query and returns its list in one response; meta is empty.";
+const UNPAGINATED = "Not paginated. The Fireflies API accepts no paging arguments for this query and returns its list in one response; meta has profile.";
 const TRANSCRIPT_ID = argument("TRANSCRIPT_ID", "Transcript ID.");
 const MEETING_ID = argument("MEETING_ID", "Live meeting ID.");
 const THREAD_ID = argument("THREAD_ID", "AskFred thread ID.");
@@ -436,8 +436,8 @@ const definitions: Definition[] = [
       startTime: context.options.string("from-date"),
       endTime: context.options.string("to-date"),
     }),
-    output: "Resource envelope. data is the analytics object with team and users; meta is empty.",
-    examples: ["fireflies analytics get", "fireflies analytics get --from-date 2026-08-01 --to-date 2026-09-01 --format human"],
+    output: "Resource envelope. data is the analytics object with team and users; meta has profile.",
+    examples: ["fireflies analytics get", "fireflies analytics get --from-date 2026-08-01 --to-date 2026-09-01 --format json"],
   },
   {
     path: ["apps", "list"],
@@ -460,7 +460,7 @@ const definitions: Definition[] = [
     }),
     collectionKey: "outputs",
     pagination: { max: 10, default: 10, ordering: PROVIDER_ORDERING },
-    output: "Collection envelope. data is an array of AI App outputs. meta has next_cursor, a decimal offset, and has_more, which is true when a page is full, so the last page can be empty.",
+    output: "Collection envelope. data is an array of AI App outputs. meta has profile, next_cursor, a decimal offset, and has_more, which is true when a page is full, so the last page can be empty.",
     examples: ["fireflies apps list --transcript-id 01HXYZ", "fireflies apps list --all --max-items 30"],
   },
   {
@@ -477,7 +477,7 @@ const definitions: Definition[] = [
     },
     variables: (context) => ({ transcriptId: context.options.string("transcript-id") }),
     unpaginated: UNPAGINATED,
-    output: "Collection envelope. data is an array of threads; meta is empty.",
+    output: "Collection envelope. data is an array of threads; meta has profile.",
     examples: ["fireflies askfred threads list", "fireflies askfred threads list --transcript-id 01HXYZ"],
   },
   {
@@ -493,7 +493,7 @@ const definitions: Definition[] = [
       selection: `${askFredThreadFields} messages { id thread_id query answer suggested_queries status error created_at updated_at }`,
     },
     variables: (context) => ({ threadId: target(context) }),
-    output: "Resource envelope. data is the thread object with its messages; meta is empty.",
+    output: "Resource envelope. data is the thread object with its messages; meta has profile.",
     examples: ["fireflies askfred threads get 01HXYZ"],
   },
   {
@@ -538,7 +538,7 @@ const definitions: Definition[] = [
       };
     },
     effect: "Creates an AskFred thread and sends the question to it.",
-    output: "Resource envelope. data has a message object, the first message of the new thread; meta is empty.",
+    output: "Resource envelope. data has a message object, the first message of the new thread; meta has profile.",
     examples: [
       "fireflies askfred threads create --question 'What did we decide about pricing?' --transcript-id 01HXYZ --yes",
       "fireflies askfred threads create --question 'List open risks' --from-date 2026-08-01 --organizer ana@example.com --dry-run",
@@ -569,7 +569,7 @@ const definitions: Definition[] = [
       },
     }),
     effect: "Adds a follow-up question to AskFred thread THREAD_ID.",
-    output: "Resource envelope. data has a message object, the new message; meta is empty.",
+    output: "Resource envelope. data has a message object, the new message; meta has profile.",
     examples: ["fireflies askfred threads continue 01HXYZ --question 'Who owns the follow-ups?' --yes"],
     exceptions: [{ rule: "CLI-GRAM-4", reason: "continue preserves the Fireflies term continueAskFredThread. The command adds a message and changes no thread field." }],
   },
@@ -587,7 +587,7 @@ const definitions: Definition[] = [
     },
     variables: (context) => ({ threadId: target(context) }),
     effect: "Deletes AskFred thread THREAD_ID and its messages. Fireflies documents no way to restore the thread.",
-    output: "Resource envelope. data is the deleted thread; meta is empty.",
+    output: "Resource envelope. data is the deleted thread; meta has profile.",
     examples: ["fireflies askfred threads delete 01HXYZ --dry-run", "fireflies askfred threads delete 01HXYZ --yes"],
   },
   {
@@ -631,7 +631,7 @@ const definitions: Definition[] = [
     },
     effect: "Queues URL for transcription in Fireflies. Fireflies returns no job identifier, so completion cannot be awaited.",
     hiddenVariables: ["download_auth"],
-    output: "Resource envelope. data has success, title, and message from Fireflies; meta is empty.",
+    output: "Resource envelope. data has success, title, and message from Fireflies; meta has profile.",
     examples: [
       "fireflies audio-files upload https://media.example.com/meeting.mp3 --title 'Weekly sync' --dry-run",
       "fireflies audio-files upload https://media.example.com/private.mp3 --download-auth-file auth.json --yes",
@@ -680,7 +680,7 @@ const definitions: Definition[] = [
     }),
     collectionKey: "events",
     pagination: { max: 50, default: 20, ordering: PROVIDER_ORDERING, style: tokenPagination },
-    output: "Collection envelope. data is an array of Open Cybersecurity Schema Framework events; meta has next_cursor and has_more from Fireflies.",
+    output: "Collection envelope. data is an array of Open Cybersecurity Schema Framework events; meta has profile, next_cursor and has_more from Fireflies.",
     examples: ["fireflies audit-events list --category AUTHENTICATION", "fireflies audit-events list --category USER_OPERATIONS --all --max-items 100"],
   },
   {
@@ -706,7 +706,7 @@ const definitions: Definition[] = [
     }),
     collection: true,
     pagination: { max: 50, default: 50, ordering: PROVIDER_ORDERING },
-    output: "Collection envelope. data is an array of soundbites. meta has next_cursor, a decimal offset, and has_more, which is true when a page is full, so the last page can be empty.",
+    output: "Collection envelope. data is an array of soundbites. meta has profile, next_cursor, a decimal offset, and has_more, which is true when a page is full, so the last page can be empty.",
     examples: ["fireflies bites list --mine", "fireflies bites list --transcript-id 01HXYZ --all"],
   },
   {
@@ -722,7 +722,7 @@ const definitions: Definition[] = [
       selection: biteFields,
     },
     variables: (context) => ({ biteId: target(context) }),
-    output: "Resource envelope. data is the soundbite object; meta is empty.",
+    output: "Resource envelope. data is the soundbite object; meta has profile.",
     examples: ["fireflies bites get 01HXYZ"],
   },
   {
@@ -763,7 +763,7 @@ const definitions: Definition[] = [
       };
     },
     effect: "Creates a soundbite from transcript TRANSCRIPT_ID.",
-    output: "Resource envelope. data is the new soundbite; meta is empty.",
+    output: "Resource envelope. data is the new soundbite; meta has profile.",
     examples: ["fireflies bites create 01HXYZ --start-time 120 --end-time 180 --name 'Pricing decision' --yes"],
   },
   {
@@ -771,8 +771,8 @@ const definitions: Definition[] = [
     summary: "List channels.",
     graphql: { kind: "query", name: "Channels", variables: "", field: "channels", selection: channelFields },
     unpaginated: UNPAGINATED,
-    output: "Collection envelope. data is an array of channels; meta is empty.",
-    examples: ["fireflies channels list", "fireflies channels list --format human"],
+    output: "Collection envelope. data is an array of channels; meta has profile.",
+    examples: ["fireflies channels list", "fireflies channels list --format json"],
   },
   {
     path: ["channels", "get"],
@@ -787,7 +787,7 @@ const definitions: Definition[] = [
       selection: channelFields,
     },
     variables: (context) => ({ channelId: target(context) }),
-    output: "Resource envelope. data is the channel object with its members; meta is empty.",
+    output: "Resource envelope. data is the channel object with its members; meta has profile.",
     examples: ["fireflies channels get 01HXYZ"],
   },
   {
@@ -795,8 +795,8 @@ const definitions: Definition[] = [
     summary: "List contacts.",
     graphql: { kind: "query", name: "Contacts", variables: "", field: "contacts", selection: "email name picture last_meeting_date" },
     unpaginated: UNPAGINATED,
-    output: "Collection envelope. data is an array of contacts; meta is empty.",
-    examples: ["fireflies contacts list", "fireflies contacts list --format human"],
+    output: "Collection envelope. data is an array of contacts; meta has profile.",
+    examples: ["fireflies contacts list", "fireflies contacts list --format json"],
   },
   {
     path: ["meetings", "list"],
@@ -818,7 +818,7 @@ const definitions: Definition[] = [
       states: context.options.strings("state"),
     }),
     unpaginated: UNPAGINATED,
-    output: "Collection envelope. data is an array of live meetings; meta is empty.",
+    output: "Collection envelope. data is an array of live meetings; meta has profile.",
     examples: ["fireflies meetings list", "fireflies meetings list --state active --email ana@example.com"],
   },
   {
@@ -835,7 +835,7 @@ const definitions: Definition[] = [
     },
     variables: (context) => ({ meetingId: target(context) }),
     unpaginated: UNPAGINATED,
-    output: "Collection envelope. data is an array of action items; meta is empty.",
+    output: "Collection envelope. data is an array of action items; meta has profile.",
     examples: ["fireflies meetings action-items list 01HXYZ"],
   },
   {
@@ -853,7 +853,7 @@ const definitions: Definition[] = [
     },
     variables: (context) => ({ input: { meeting_id: target(context), prompt: context.options.string("prompt") } }),
     effect: "Creates a live action item in meeting MEETING_ID.",
-    output: "Resource envelope. data has success from Fireflies; meta is empty.",
+    output: "Resource envelope. data has success from Fireflies; meta has profile.",
     examples: ["fireflies meetings action-items create 01HXYZ --prompt 'Send the revised proposal' --yes"],
   },
   {
@@ -871,7 +871,7 @@ const definitions: Definition[] = [
     },
     variables: (context) => ({ input: { meeting_id: target(context), prompt: context.options.string("prompt") } }),
     effect: "Creates a live soundbite in meeting MEETING_ID.",
-    output: "Resource envelope. data has success from Fireflies; meta is empty.",
+    output: "Resource envelope. data has success from Fireflies; meta has profile.",
     examples: ["fireflies meetings soundbites create 01HXYZ --prompt 'Capture the pricing discussion' --yes"],
   },
   {
@@ -908,7 +908,7 @@ const definitions: Definition[] = [
       };
     },
     effect: "Sends the Fireflies bot to the meeting at MEETING_LINK.",
-    output: "Resource envelope. data has success from Fireflies; meta is empty.",
+    output: "Resource envelope. data has success from Fireflies; meta has profile.",
     examples: ["fireflies meetings bots create https://meet.google.com/abc-defg-hij --title 'Weekly sync' --dry-run"],
   },
   {
@@ -926,7 +926,7 @@ const definitions: Definition[] = [
     },
     variables: (context) => ({ input: { meeting_id: target(context), action: context.options.string("action") } }),
     effect: "Pauses or resumes the recording of meeting MEETING_ID.",
-    output: "Resource envelope. data has success and action from Fireflies; meta is empty.",
+    output: "Resource envelope. data has success and action from Fireflies; meta has profile.",
     examples: ["fireflies meetings state update 01HXYZ --action pause_recording --yes"],
   },
   {
@@ -972,7 +972,7 @@ const definitions: Definition[] = [
     }),
     collectionKey: "meetings",
     pagination: { max: 50, default: 10, ordering: PROVIDER_ORDERING, style: tokenPagination },
-    output: "Collection envelope. data is an array of meeting groups, each with at most --logs-per-meeting executions, so --all pages meeting groups and can omit executions. meta has next_cursor and has_more from Fireflies.",
+    output: "Collection envelope. data is an array of meeting groups, each with at most --logs-per-meeting executions, so --all pages meeting groups and can omit executions. meta has profile, next_cursor and has_more from Fireflies.",
     examples: ["fireflies rules executions list", "fireflies rules executions list --meeting-id 01HXYZ --from-date 2026-08-01"],
   },
   {
@@ -1020,7 +1020,7 @@ const definitions: Definition[] = [
     },
     collection: true,
     pagination: { max: 50, default: 50, ordering: PROVIDER_ORDERING },
-    output: "Collection envelope. data is an array of transcripts. meta has next_cursor, a decimal offset, and has_more, which is true when a page is full, so the last page can be empty.",
+    output: "Collection envelope. data is an array of transcripts. meta has profile, next_cursor, a decimal offset, and has_more, which is true when a page is full, so the last page can be empty.",
     examples: [
       "fireflies transcripts list --mine --from-date 2026-08-01 --page-size 20",
       "fireflies transcripts list --keyword underwriting --scope all --participant buyer@example.com --all --max-items 100",
@@ -1040,8 +1040,8 @@ const definitions: Definition[] = [
       selection: transcriptFields,
     },
     variables: (context) => ({ transcriptId: target(context) }),
-    output: "Resource envelope. data is the transcript object; meta is empty.",
-    examples: ["fireflies transcripts get 01HXYZ", "fireflies transcripts get 01HXYZ --format human"],
+    output: "Resource envelope. data is the transcript object; meta has profile.",
+    examples: ["fireflies transcripts get 01HXYZ", "fireflies transcripts get 01HXYZ --format json"],
   },
   {
     path: ["transcripts", "delete"],
@@ -1057,7 +1057,7 @@ const definitions: Definition[] = [
     },
     variables: (context) => ({ transcriptId: target(context) }),
     effect: "Permanently deletes transcript TRANSCRIPT_ID. Fireflies documents no way to restore the transcript.",
-    output: "Resource envelope. data is the deleted transcript; meta is empty.",
+    output: "Resource envelope. data is the deleted transcript; meta has profile.",
     examples: ["fireflies transcripts delete 01HXYZ --dry-run", "fireflies transcripts delete 01HXYZ --yes"],
   },
   {
@@ -1075,7 +1075,7 @@ const definitions: Definition[] = [
     },
     variables: (context) => ({ input: { id: target(context), title: context.options.string("title") } }),
     effect: "Changes the title of transcript TRANSCRIPT_ID.",
-    output: "Resource envelope. data has id and title; meta is empty.",
+    output: "Resource envelope. data has id and title; meta has profile.",
     examples: ["fireflies transcripts title update 01HXYZ --title 'Q3 planning review' --yes"],
   },
   {
@@ -1095,7 +1095,7 @@ const definitions: Definition[] = [
     },
     variables: (context) => ({ input: { id: target(context), privacy: context.options.string("privacy") } }),
     effect: "Changes the privacy of transcript TRANSCRIPT_ID.",
-    output: "Resource envelope. data has id, title, and privacy; meta is empty.",
+    output: "Resource envelope. data has id, title, and privacy; meta has profile.",
     examples: ["fireflies transcripts privacy update 01HXYZ --privacy owner --dry-run", "fireflies transcripts privacy update 01HXYZ --privacy owner --yes"],
   },
   {
@@ -1115,7 +1115,7 @@ const definitions: Definition[] = [
       input: { transcript_ids: [target(context)], channel_id: context.options.string("channel-id") },
     }),
     effect: "Moves transcript TRANSCRIPT_ID to the channel.",
-    output: "Resource envelope. data is the updated transcript with its channels; meta is empty.",
+    output: "Resource envelope. data is the updated transcript with its channels; meta has profile.",
     examples: ["fireflies transcripts channel update 01HXYZ --channel-id 01ABCD --yes"],
   },
   {
@@ -1143,7 +1143,7 @@ const definitions: Definition[] = [
       return { input: { meeting_id: target(context), emails, expiry_days: expiry === undefined ? undefined : Number(expiry) } };
     },
     effect: "Gives the listed email addresses access to transcript TRANSCRIPT_ID.",
-    output: "Resource envelope. data has success and message from Fireflies; meta is empty.",
+    output: "Resource envelope. data has success and message from Fireflies; meta has profile.",
     examples: ["fireflies transcripts share 01HXYZ --email ana@example.com --email ben@example.com --expiry-days 14 --yes"],
     exceptions: [{ rule: "CLI-GRAM-4", reason: "share preserves the Fireflies term shareMeeting." }],
   },
@@ -1164,7 +1164,7 @@ const definitions: Definition[] = [
       input: { meeting_id: target(context), email: context.options.string("email") },
     }),
     effect: "Removes the email address's shared access to transcript TRANSCRIPT_ID.",
-    output: "Resource envelope. data has success and message from Fireflies; meta is empty.",
+    output: "Resource envelope. data has success and message from Fireflies; meta has profile.",
     examples: ["fireflies transcripts access revoke 01HXYZ --email ana@example.com --yes"],
     exceptions: [{ rule: "CLI-GRAM-4", reason: "revoke preserves the Fireflies term revokeSharedMeetingAccess." }],
   },
@@ -1173,8 +1173,8 @@ const definitions: Definition[] = [
     summary: "List team users.",
     graphql: { kind: "query", name: "Users", variables: "", field: "users", selection: userFields },
     unpaginated: UNPAGINATED,
-    output: "Collection envelope. data is an array of users; meta is empty.",
-    examples: ["fireflies users list", "fireflies users list --format human"],
+    output: "Collection envelope. data is an array of users; meta has profile.",
+    examples: ["fireflies users list", "fireflies users list --format json"],
   },
   {
     path: ["users", "get"],
@@ -1189,15 +1189,15 @@ const definitions: Definition[] = [
       selection: userFields,
     },
     variables: (context) => ({ userId: target(context) }),
-    output: "Resource envelope. data is the user object; meta is empty.",
+    output: "Resource envelope. data is the user object; meta has profile.",
     examples: ["fireflies users get 01HXYZ"],
   },
   {
     path: ["users", "current", "get"],
     summary: "Get the user that owns the API key.",
     graphql: { kind: "query", name: "CurrentUser", variables: "", field: "user", selection: userFields },
-    output: "Resource envelope. data is the user object of the API key owner; meta is empty.",
-    examples: ["fireflies users current get", "fireflies users current get --format human"],
+    output: "Resource envelope. data is the user object of the API key owner; meta has profile.",
+    examples: ["fireflies users current get", "fireflies users current get --format json"],
   },
   {
     path: ["users", "groups", "list"],
@@ -1213,7 +1213,7 @@ const definitions: Definition[] = [
     },
     variables: (context) => ({ mine: context.options.flag("mine") ? true : undefined }),
     unpaginated: UNPAGINATED,
-    output: "Collection envelope. data is an array of user groups; meta is empty.",
+    output: "Collection envelope. data is an array of user groups; meta has profile.",
     examples: ["fireflies users groups list", "fireflies users groups list --mine"],
   },
   {
@@ -1231,7 +1231,7 @@ const definitions: Definition[] = [
     },
     variables: (context) => ({ userId: target(context), role: context.options.string("role") }),
     effect: "Changes the role of user USER_ID.",
-    output: "Resource envelope. data is the updated user; meta is empty.",
+    output: "Resource envelope. data is the updated user; meta has profile.",
     examples: ["fireflies users role update 01HXYZ --role admin --dry-run", "fireflies users role update 01HXYZ --role user --yes"],
   },
 ];

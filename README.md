@@ -17,7 +17,7 @@ cd fireflies-cli && bun run build && bun link
 ```bash
 fireflies setup
 # List your transcripts since August 1 as a table.
-fireflies transcripts list --mine --from-date 2026-08-01 --format human
+fireflies transcripts list --mine --from-date 2026-08-01
 # Get one transcript with its sentences, summary, and analytics.
 fireflies transcripts get 01HXYZ
 # Preview a title change without sending it.
@@ -125,7 +125,7 @@ fireflies transcripts title update 01HXYZ --title 'Q3 planning review' --dry-run
 
 | Command | Description | Options |
 | --- | --- | --- |
-| fireflies setup [NAME] | Create and activate a profile. | --api-key-file PATH, --base-url URL, --from-env |
+| fireflies setup [NAME] | Create and activate a profile. | --api-key-file PATH, --base-url URL |
 
 ### profiles
 
@@ -144,8 +144,6 @@ fireflies transcripts title update 01HXYZ --title 'Q3 planning review' --dry-run
 | --- | --- | --- |
 | fireflies config list | List every configuration key. | None |
 | fireflies config get KEY | Get one configuration value. | None |
-| fireflies config set KEY VALUE | Set one configuration value. | None |
-| fireflies config unset KEY | Remove one configuration value. | None |
 | fireflies config path | Get the configuration paths. | None |
 
 ### auth
@@ -173,7 +171,7 @@ fireflies transcripts title update 01HXYZ --title 'Q3 planning review' --dry-run
 | -h, --help | Show help. Uses no credentials or network. |
 | --version | Print the executable name and version. |
 | --profile NAME | Select a saved profile. |
-| --format FORMAT | Output format. Allowed: json, pretty, human. Default: json. |
+| --format FORMAT | Output format. Allowed: json, pretty, human. Default: human. |
 | --color WHEN | Color for pretty and human output. Allowed: auto, always, never. Default: auto. |
 | -q, --quiet | Suppress progress and notices. Results and errors still print. |
 | -v, --verbose | Print redacted diagnostics to stderr. |
@@ -191,40 +189,38 @@ fireflies setup work --api-key-file ./fireflies-api-key.txt
 fireflies auth verify
 ```
 
-`setup [NAME]` creates a profile (default name: `default`) and makes it the active profile. It fails when the profile exists. If activation fails after the profile is written, the profile stays saved and `setup` exits 8 with `PARTIAL_FAILURE`. In a terminal without `--no-input`, `setup` prompts for a missing API key with hidden input. Secrets are never command-line values: pass `--api-key-file PATH` (`-` reads stdin), set `FIREFLIES_API_KEY`, or enter the key at the prompt. `setup --from-env` copies `FIREFLIES_API_KEY` and `FIREFLIES_BASE_URL` into the profile and cannot be combined with `--api-key-file` or `--base-url`. The same rule covers `audio-files upload --download-auth-file PATH` and `meetings bots create --meeting-password-file PATH`, which read a secret from a file, or from stdin with `-`.
+`setup [NAME]` creates a profile (default name: `default`) and makes it the active profile. It fails when the profile exists. If activation fails after the profile is written, the profile stays saved and `setup` exits 8 with `PARTIAL_FAILURE`. In a terminal without `--no-input`, `setup` prompts for a missing API key with hidden input. Secrets are never command-line values: pass `--api-key-file PATH` (`-` reads stdin) or enter the key at the prompt. The same rule covers `audio-files upload --download-auth-file PATH` and `meetings bots create --meeting-password-file PATH`, which read a secret from a file, or from stdin with `-`.
+
+Credentials and endpoint settings come only from a profile. No environment variable supplies them or selects a profile, so a scheduled job passes `--profile NAME` explicitly. Profile selection is `--profile NAME`, otherwise `activeProfile` in `config.json`. A selected or active profile that does not exist, and no profile at all, fail with `CONFIGURATION_ERROR` and no fallback. The hint points to `fireflies setup NAME` or `fireflies profiles use NAME`.
+
+The CLI reads three environment variables, and none supplies credentials, endpoints, or a profile:
 
 | Variable | Purpose |
 | --- | --- |
-| `FIREFLIES_PROFILE` | Select a saved profile. |
-| `FIREFLIES_API_KEY` | Fireflies API key (bearer token). |
-| `FIREFLIES_BASE_URL` | Complete GraphQL endpoint URL. Default: `https://api.fireflies.ai/graphql`. |
 | `XDG_CONFIG_HOME` | Configuration root when it is an absolute path. Otherwise `~/.config`. |
 | `NO_COLOR` | Disables color with `--color auto` when set and nonempty. |
 | `CI` | Disables prompts when nonempty and not `0` or `false`. |
 
-A `FIREFLIES_` variable that is set but empty, a malformed `FIREFLIES_PROFILE`, and an invalid `FIREFLIES_BASE_URL` fail with `CONFIGURATION_ERROR` and name the variable. None of them falls through to the next source.
+Stored in the profile:
 
-Precedence:
-
-1. Profile selection: `--profile`, `FIREFLIES_PROFILE`, then `activeProfile` in `config.json`. A selected or active profile that does not exist fails with `CONFIGURATION_ERROR`, with no fallback.
-2. Credentials: `FIREFLIES_API_KEY`, then the selected profile.
-3. Endpoint: `FIREFLIES_BASE_URL`, the selected profile, `baseUrl` in `config.json`, then `https://api.fireflies.ai/graphql`.
+- Endpoint: `baseUrl` in the profile, then `https://api.fireflies.ai/graphql`.
 
 `fireflies auth verify` sends `POST /graphql` with the VerifyCredential query. Success proves that Fireflies accepted the API key and identifies its owner. It does not prove complete permission coverage.
 
 ## Output and errors
 
-The default output format is `json`: one compact, uncolored line on stdout with the envelope `{"data":...,"meta":{...}}`. `--format pretty` prints the same document indented, with syntax highlighting when color applies. `--format human` prints tables for collections and labeled fields for one resource. Errors go to stderr in the selected format. Help, `--version`, and `completions` print plain text.
+The default output format is `human`: tables for collections and labeled fields for one resource, whatever the terminal. Nested objects and arrays inside one resource print as indented fields and lists, and a table cell shows a short summary such as a name or `N items`, never raw JSON. A dry run prints `dry_run` and `validation`, then each request on its own lines. `--format json` prints one compact, uncolored line on stdout with the envelope `{"data":...,"meta":{...}}`, and scripts and agents pass it explicitly. `--format pretty` prints the same document indented, with syntax highlighting when color applies. With `--format pretty` or the default `human` format and stderr on a terminal, a command that sends a request first prints one gray line, `Profile: NAME`, to stderr. `--quiet` suppresses it, and `--format json` never prints it. Errors go to stderr in the selected format, so the default error is the `human` text. Help, `--version`, and `completions` print plain text. The bare command and a command group with no action print the same help as `--help` on stdout, exit 0; an unknown action fails with exit 2.
 
 `data` is an object for one resource, an array for a collection, or `null`, and keeps Fireflies field names. `meta` is always present.
 
 | `meta` key | When |
 | --- | --- |
+| `profile` | Every command that sends a request. The name of the profile that served it. |
 | `next_cursor` | Paginated collection reads. A string, or `null` when no page remains. |
 | `has_more` | Paginated collection reads. |
 | `dry_run`, `validation` | Dry-run previews. `validation` is `local`. |
 
-Errors print one document on stderr, for example `{"error":{"code":"RATE_LIMITED","message":"Fireflies rejected the request: too many requests (HTTP 429).","hint":"Wait 20 seconds and retry.","retryable":true,"provider":{"status":429,"code":"too_many_requests","request_id":"req_123","retry_after_seconds":20}}}`. Optional keys are `hint`, `outcome` (`unknown` when a mutation may have applied), `provider` (`status`, `code`, `request_id`, `retry_after_seconds`), `details`, and `partial`. `--format human` prints `Error [CODE]: message` and `Hint: ...`.
+With `--format json`, errors print one compact document on stderr, for example `{"error":{"code":"RATE_LIMITED","message":"Fireflies rejected the request: too many requests (HTTP 429).","hint":"Wait 20 seconds and retry.","retryable":true,"provider":{"status":429,"code":"too_many_requests","request_id":"req_123","retry_after_seconds":20}}}`. Optional keys are `hint`, `outcome` (`unknown` when a mutation may have applied), `provider` (`status`, `code`, `request_id`, `retry_after_seconds`), `details`, and `partial`. The default `human` format prints `Error [CODE]: message` and `Hint: ...`.
 
 | Exit | Error codes |
 | --- | --- |
@@ -255,8 +251,8 @@ Paginated commands fetch one page by default. Fireflies documents a maximum of 5
 `--all` follows every cursor. `--max-items N` (with `--all`) shrinks the last request so the read stops on a page boundary, and `meta.next_cursor` resumes it. `--cursor TOKEN` resumes from a previous `meta.next_cursor`, with or without `--all`. `transcripts list`, `bites list`, and `apps list` use decimal offsets as cursors, and Fireflies reports no page count, so `has_more` is true whenever a page is full and the last page can be empty. `audit-events list` and `rules executions list` pass the Fireflies continuation token through unchanged.
 
 ```bash
-fireflies transcripts list --all --max-items 100 > transcripts.json
-fireflies transcripts list --all --cursor "$(jq -r '.meta.next_cursor' transcripts.json)"
+fireflies transcripts list --all --max-items 100 --format json > transcripts.json
+fireflies transcripts list --all --cursor "$(jq -r '.meta.next_cursor' transcripts.json)" --format json
 ```
 
 A repeated cursor or an oversized page on the first page fails with `INVALID_RESPONSE` and exit 1. A failure on a later page exits 8 with `PARTIAL_FAILURE`. The items read so far are in `error.partial.data`, `error.partial.next_cursor` points at the first unread item, and `error.details.cause` names the underlying error code, such as `INVALID_RESPONSE`.
@@ -276,13 +272,13 @@ Files live in `$XDG_CONFIG_HOME/fireflies` when `XDG_CONFIG_HOME` is an absolute
 
 ```text
 fireflies/
-  config.json            {"activeProfile": "work", "baseUrl": "https://api.fireflies.ai/graphql"}
+  config.json            {"activeProfile": "work"}
   profiles/NAME.json     {"apiKey": "...", "baseUrl": "https://api.fireflies.ai/graphql"}
 ```
 
-Keys are camelCase. Files use mode `0600`, directories use mode `0700`, and writes are atomic: the CLI creates a temporary file exclusively with mode `0600` in the same directory, then renames it. Reads reject unknown keys and non-object JSON with `CONFIGURATION_ERROR`. Profile names match `^[A-Za-z0-9._-]+$` and are not `.` or `..`. `config.json` keys: `activeProfile` (read-only through `config`; change it with `profiles use`) and `baseUrl`. Profile fields: `apiKey` and `baseUrl`. Secrets are redacted in previews, diagnostics, `profiles get`, and `config list`.
+Keys are camelCase. Files use mode `0600`, directories use mode `0700`, and writes are atomic: the CLI creates a temporary file exclusively with mode `0600` in the same directory, then renames it. Reads reject unknown keys and non-object JSON with `CONFIGURATION_ERROR`. Profile names match `^[A-Za-z0-9._-]+$` and are not `.` or `..`. `config.json` holds one key, `activeProfile` (read-only through `config`; change it with `profiles use`). Credentials and endpoint settings live only in profile files, and a `config.json` with any other key fails with `CONFIGURATION_ERROR`. Profile fields: `apiKey` and `baseUrl`. Secrets are redacted in previews, diagnostics, `profiles get`, and `config list`.
 
-A base URL, from `--base-url`, `config set baseUrl`, `FIREFLIES_BASE_URL`, or a stored file, is the complete GraphQL endpoint. It must be an `https` URL (`http` only for `localhost`, `127.0.0.1`, or `::1`) with no credentials, query string, or fragment. Any path is accepted. Values are stored unchanged, and requests go to the full URL.
+A base URL, from `--base-url` or a stored file, is the complete GraphQL endpoint. It must be an `https` URL (`http` only for `localhost`, `127.0.0.1`, or `::1`) with no credentials, query string, or fragment. Any path is accepted. Values are stored unchanged, and requests go to the full URL.
 
 Completion scripts come from `fireflies completions bash|zsh|fish` and read only the command registry and local profile names. They complete commands, options, enum values (after `--OPT ` and `--OPT=`), `METHOD`, `SHELL`, and profile names (after `--profile` and for the `NAME` argument of `profiles get|update|delete|use`). They offer nothing after `--` or after an option that takes a free-form value.
 
